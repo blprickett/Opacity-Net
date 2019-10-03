@@ -24,7 +24,7 @@
   * So to run these simulations, run the following command from the "Seq2Seq_Simulation" directory:
 
     ```bash
-            python "Opacity Seq2Seq+Forced_Choice.py" #REPS #EPOCHS #FEATTYPE ```
-    (where #REPS is the number of repetitions, #EPOCHS is the number of epochs, and #FEATTYPE is the feature type)
+            python "Opacity Seq2Seq+Forced_Choice.py" REPS EPOCHS FEATURETYPE 
+    ```
 
   * Then, if you want to create the plots that I used in the paper, run the R script "MakePlots_Seq2Seq.R" with the "Curves by trial type (Seq2Seq-ForcedChoice).csv" file in the working directory you're using.
