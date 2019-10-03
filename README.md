@@ -13,6 +13,7 @@
 * You'll obviously need all of the packages I import at the beginning of the program (and their dependencies):
 
   * [Keras](https://keras.io/)
+  * [recurrentshop](https://github.com/farizrahman4u/recurrentshop)
   * [seq2seq](https://github.com/farizrahman4u/seq2seq)
   * [numpy](http://www.numpy.org/)
   * [random](https://docs.python.org/2/library/random.html)
