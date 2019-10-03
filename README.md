@@ -12,12 +12,11 @@
 
 * You'll obviously need all of the packages I import at the beginning of the program (and their dependencies):
 
-  * Keras		https://keras.io/
-  * seq2seq		https://github.com/farizrahman4u/seq2seq
-  * recurrentshop	https://github.com/farizrahman4u/recurrentshop
-  * numpy		http://www.numpy.org/
-  * random		https://docs.python.org/2/library/random.html
-  * sys			https://docs.python.org/2/library/sys.html
+  * [Keras](https://keras.io/)
+  * [seq2seq](https://github.com/farizrahman4u/seq2seq)
+  * [numpy](http://www.numpy.org/)
+  * [random](https://docs.python.org/2/library/random.html)
+  * [sys](https://docs.python.org/2/library/sys.html)
 
 * The only inline arguments needed are the number of repetitions, the amount of epochs per repetition, and the feature type (either "byHand" or "oneHot"; the results from the paper use "byHand").
 
