@@ -27,4 +27,4 @@
             python Opacity_Seq2Seq.py REPS EPOCHS FEATURETYPE 
     ```
 
-* Then, if you want to create the plots that I used in the paper, run the R script "MakePlots_Seq2Seq.R" with the "Curves by trial type (Seq2Seq-ForcedChoice).csv" file in the working directory you're using.
+* Then, if you want to create the plots that I used in the paper, run the R script "MakePlots_Seq2Seq.R" with the "Curves by trial type (NN-ForcedChoice).csv" file in the working directory you're using.
