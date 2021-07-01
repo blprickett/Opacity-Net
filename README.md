@@ -1,6 +1,6 @@
 # Opacity-Net
 
-* Neural network designed to learn bleeding, feeding, counterbleeding, and counterfeeding phonological interactions. For more information about the model and the motivation behind it, see [this manuscript](https://people.umass.edu/bprickett/Downloads/Opacity-Manuscript-Prickett2019.pdf) or [the published paper in *Phonology*](https://www.cambridge.org/core/journals/phonology/article/abs/learning-biases-in-opaque-interactions/A912635748ED114CE2974E8A8E2CAF5E).
+* Neural network designed to learn bleeding, feeding, counterbleeding, and counterfeeding phonological interactions. For more information about the model and the motivation behind it, see [this manuscript](https://brandon-prickett.com/wp-content/uploads/2021/07/Opacity-Manuscript-Prickett-2019.pdf) or [the published paper in *Phonology*](https://www.cambridge.org/core/journals/phonology/article/abs/learning-biases-in-opaque-interactions/A912635748ED114CE2974E8A8E2CAF5E).
 
 * All of the training data is hardcoded into the python file, so no input files are necessary.
 
