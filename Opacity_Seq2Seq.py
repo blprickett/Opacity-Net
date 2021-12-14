@@ -1,10 +1,8 @@
 import numpy as np
 import scipy.stats as sp
 import keras
-import seq2seq
-from seq2seq.models import Seq2Seq
+import Seq2Seq
 from random import shuffle
-from keras.optimizers import RMSprop, Adam
 from sys import argv
 
 ##USER PARAMETERS##				
@@ -16,22 +14,22 @@ FEATURES = argv[3] #"byHand" or "oneHot"
 #Dictionary, mapping segments to their feature bundles
 if FEATURES == "byHand":
 	FEAT_CONVERT = {		 #syllabic, coronal, 	anterior, 	dorsal, high
-						"t": [-1, 		1,			1,			0,		0],
-						"T": [-1, 		1,			-1,			0,		0],
-						"k": [-1, 		0,			0,			1,		0],
-						"i": [1, 		0,			0,			0,		1],
-						"a": [1, 		0,			0,			0,		-1],
-						"E": [0,		0,			0,			0,		0], #(Empty symbol)
+						"t": [-1., 		1.,			1.,			0.,		0.],
+						"T": [-1., 		1.,			-1.,			0.,		0.],
+						"k": [-1., 		0.,			0.,			1.,		0.],
+						"i": [1., 		0.,			0.,			0.,		1.],
+						"a": [1., 		0.,			0.,			0.,		-1.],
+						"E": [0.,		0.,			0.,			0.,		0.], #(Empty symbol)
 					}
 	FEAT_NUM = len(list(FEAT_CONVERT.values())[0])
 elif FEATURES == "oneHot":
 	FEAT_CONVERT = {		 
-						"t": [1, 		0,			0,			0,		0],
-						"T": [0, 		1,			0,			0,		0],
-						"k": [0, 		0,			1,			0,		0],
-						"i": [0, 		0,			0,			1,		0],
-						"a": [0, 		0,			0,			0,		1],
-						"E": [0,		0,			0,			0,		0], #(Empty symbol)
+						"t": [1., 		0.,			0.,			0.,		0.],
+						"T": [0., 		1.,			0.,			0.,		0.],
+						"k": [0., 		0.,			1.,			0.,		0.],
+						"i": [0., 		0.,			0.,			1.,		0.],
+						"a": [0., 		0.,			0.,			0.,		1.],
+						"E": [0.,		0.,			0.,			0.,		0.], #(Empty symbol)
 					}
 	FEAT_NUM = len(list(FEAT_CONVERT.values())[0])
 else:
@@ -149,38 +147,47 @@ for patt in PATTERNS.keys():
 		Y = np.array([ordered_Y[i] for i in indexes])
 		
 		#Create the model object:
-		model = Seq2Seq(input_dim=FEAT_NUM, hidden_dim=FEAT_NUM*3, output_length=3, output_dim=FEAT_NUM, depth=2)
-		my_optimizer = RMSprop(lr=0.005)
-		model.compile(	loss="mse", 
-				optimizer=my_optimizer,
-				metrics=['accuracy']
-			)
+		#model = Seq2Seq(input_dim=FEAT_NUM, hidden_dim=FEAT_NUM*3, output_length=3, output_dim=FEAT_NUM, depth=2)
+  
+    #Build the new model:
+		model = Seq2Seq.seq2seq(
+              input_dim=FEAT_NUM,
+              hidden_dim=FEAT_NUM*3,
+              output_length=3,
+              output_dim=FEAT_NUM,
+              batch_size=1,
+              learn_rate=0.005,
+              layer_type="lstm",
+		)
 			
 		this_curve = []
 		for ep in range(EPOCHS):
-		#Train the model on epoch at a time, 
+		#Train the model one epoch at a time, 
 		#so we can give it a forced-choice task at each step:
 			print ("Epoch: "+str(ep))
-			hist = model.fit(
+			hist = model.train(
 						X, Y,
-						epochs=1,
-						batch_size=X.shape[0]
-				 )
-			this_curve.append(hist.history["acc"][-1])
+						epoch_num=1,
+						print_every=2
+			)
+			this_curve.append(hist["Loss"][-1])
 			for trial_type in accuracies.keys():
-				corr_loss = model.evaluate(		x=np.array(UR_test_data[trial_type][patt]),
-												y=np.array(correct_SR_test_data[trial_type][patt])
-											)
-				wrong_loss = model.evaluate(	x=np.array(UR_test_data[trial_type][patt]),
-												y=np.array(wrong_SR_test_data[trial_type][patt])
-											)
+				corr_loss = np.square(np.subtract(np.array(correct_SR_test_data[trial_type][patt]).flatten(),model.predict(np.array(UR_test_data[trial_type][patt])).flatten())).mean()
+				#corr_loss = model.evaluate(		x=np.array(UR_test_data[trial_type][patt]),
+				#								y=np.array(correct_SR_test_data[trial_type][patt])
+				#)
+
+				wrong_loss = np.square(np.subtract(np.array(wrong_SR_test_data[trial_type][patt]).flatten(),model.predict(np.array(UR_test_data[trial_type][patt])).flatten())).mean()
+				#wrong_loss = model.evaluate(	x=np.array(UR_test_data[trial_type][patt]),
+				#								y=np.array(wrong_SR_test_data[trial_type][patt])
+				#							)
 				
 				#Accuracy, based on Luce choice axiom
 				try:
-					curve_by_trialType[trial_type][patt][rep].append(wrong_loss[0]/(corr_loss[0]+wrong_loss[0]))
+					curve_by_trialType[trial_type][patt][rep].append(wrong_loss/(corr_loss+wrong_loss))
 				except:
 					curve_by_trialType[trial_type][patt].append([])
-					curve_by_trialType[trial_type][patt][rep].append(wrong_loss[0]/(corr_loss[0]+wrong_loss[0]))
+					curve_by_trialType[trial_type][patt][rep].append(wrong_loss/(corr_loss+wrong_loss))
 				 
 		#Record the learning curve:		
 		curve_file.write(patt+",")
@@ -192,26 +199,34 @@ for patt in PATTERNS.keys():
 			if trial_type=="Faithful":
 				accs = []
 				for ur_index, faithful_ur in enumerate(UR_test_data[trial_type][patt]):
-					corr_loss = model.evaluate(		x=np.array([faithful_ur]),
-													y=np.array([correct_SR_test_data[trial_type][patt][ur_index]])
-												)
-					wrong_loss = model.evaluate(	x=np.array([faithful_ur]),
-													y=np.array([wrong_SR_test_data[trial_type][patt][ur_index]])
-												)
+					#corr_loss = model.evaluate(		x=np.array([faithful_ur]),
+					#								y=np.array([correct_SR_test_data[trial_type][patt][ur_index]])
+					#							)
+					corr_loss = np.square(np.subtract(np.array([correct_SR_test_data[trial_type][patt][ur_index]]).flatten(),model.predict(np.array([faithful_ur])).flatten())).mean()
+
+					#wrong_loss = model.evaluate(	x=np.array([faithful_ur]),
+					#								y=np.array([wrong_SR_test_data[trial_type][patt][ur_index]])
+					#							)
+					wrong_loss = np.square(np.subtract(np.array([wrong_SR_test_data[trial_type][patt][ur_index]]).flatten(),model.predict(np.array([faithful_ur])).flatten())).mean()
+  
 												
 					#Accuracy, based on Luce choice axiom
-					accs.append(wrong_loss[0]/(corr_loss[0]+wrong_loss[0]))
+					accs.append(wrong_loss/(corr_loss+wrong_loss))
 				acc = np.mean(accs)
 			else:
-				corr_loss = model.evaluate(		x=np.array(UR_test_data[trial_type][patt]),
-												y=np.array(correct_SR_test_data[trial_type][patt])
-											)
-				wrong_loss = model.evaluate(	x=np.array(UR_test_data[trial_type][patt]),
-												y=np.array(wrong_SR_test_data[trial_type][patt])
-											)
+				#corr_loss = model.evaluate(		x=np.array(UR_test_data[trial_type][patt]),
+				#								y=np.array(correct_SR_test_data[trial_type][patt])
+				#							)
+				corr_loss = np.square(np.subtract(np.array(correct_SR_test_data[trial_type][patt]).flatten(),model.predict(np.array(UR_test_data[trial_type][patt])).flatten())).mean()
+
+				#wrong_loss = model.evaluate(	x=np.array(UR_test_data[trial_type][patt]),
+				#								y=np.array(wrong_SR_test_data[trial_type][patt])
+				#							)
+				wrong_loss = np.square(np.subtract(np.array(wrong_SR_test_data[trial_type][patt]).flatten(),model.predict(np.array(UR_test_data[trial_type][patt])).flatten())).mean()
+
 				
 				#Accuracy, based on Luce choice axiom
-				acc = wrong_loss[0]/(corr_loss[0]+wrong_loss[0])
+				acc = wrong_loss/(corr_loss+wrong_loss)
 			
 			#Store accuracies
 			accuracies[trial_type].append(acc)
